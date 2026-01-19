@@ -7,37 +7,15 @@
 - `SKILL.md`：skill 入口说明（包含 agent 指令与 CLI 调用方式）
 - `scripts/`：可执行脚本（确定性流水线与工具脚本）
 
-## 快速使用（CLI）
+## 安装
 
-在仓库根目录、`DataProcessing` conda 环境中运行：
+将发布包放在agent skill目录中，如“~/.codex/skills
 
-1) 生成初版 `match_result.json`：
+## 使用
 
-```bash
-conda run --no-capture-output -n DataProcessing \
-  python literature-match/scripts/cli.py match \
-  --refs-extracted artifacts/<doc_stem>/refs_extracted.json \
-  --library-cache examples/example_entry.library.betterbibtexjson
+在Agent工具中使用如下提示词调用skill：
+
+```text
+$literature-match：调用skill，对<input.md>进行文献匹配。
 ```
-
-2) 应用 `llm_decisions.json` 固化最终结果：
-
-```bash
-conda run --no-capture-output -n DataProcessing \
-  python literature-match/scripts/cli.py apply-decisions \
-  --match-result artifacts/<doc_stem>/match_result.json \
-  --llm-decisions artifacts/<doc_stem>/llm_decisions.json
-```
-
-3)（可选）Gemini DR 文档链接化（输出 `<doc>_processed.md`）：
-
-```bash
-python literature-match/scripts/gemini_dr_link.py \
-  --doc-path <doc_path> \
-  --match-result artifacts/<doc_stem>/match_result.json
-```
-
-## 重要约束
-
-- `SKILL.md` 中标记为 **Agent instructions** 的步骤应由 LLM 直接完成（语义抽取/判别），不要擅自写临时脚本替代，否则通常会降低输出质量与可控性。
 
