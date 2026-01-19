@@ -27,6 +27,7 @@ It is designed for controllable cost at scale:
 - **Do not modify the input document**: no link insertion, no rewriting Markdown.
 - **Do not write back to Zotero**: no tagging/collection changes as part of this skill.
 - **Do not send full library to LLM**: LLM may only see one reference entry plus its topK candidates.
+- **Agent steps are LLM-only**: for steps marked “Agent instructions”, do not create/execute ad-hoc scripts or new code files to perform the step; do the work in the LLM and only write the required JSON outputs to disk via the agent’s native file-writing mechanism.
 - **Cross‑platform**: Zotero attachment `path` is an opaque string (do not rewrite/mmap).
 - **Output JSON**: always UTF‑8 and `ensure_ascii=false`; schema must be stable (no missing required fields).
 
@@ -140,6 +141,8 @@ Only for `needs_llm` refs:
 
 ## Agent instructions
 
+These steps intentionally rely on LLM semantic judgement. Do not convert them into “write a Python script and run it” automation; only the deterministic pipeline should be executed via the shipped scripts in `scripts/`.
+
 ### A) Extract references → `refs_extracted.json`
 
 Use this when the input is a Markdown document whose References section varies by source and is hard to robustly parse with fixed rules.
@@ -151,6 +154,7 @@ Use this when the input is a Markdown document whose References section varies b
 - Line numbers are **1-based** and inclusive. If you cannot determine, use `-1`.
 - Preserve traceability: always include `raw_text` for each extracted ref.
 - Prefer writing the full JSON to disk to avoid chat/output truncation (see prompt below).
+- Do not create/execute ad-hoc scripts or new code files for this step.
 
 **Output shape (agent should follow; code will parse tolerantly)**
 
@@ -224,6 +228,7 @@ Use this after the code has produced an initial `match_result.json` with `needs_
   - `null` (if none fit).
 - Do not use candidates outside topK; do not search the full Zotero library.
 - Prefer writing the full JSON to disk to avoid chat/output truncation (see prompt below).
+- Do not create/execute ad-hoc scripts or new code files for this step.
 
 **Output shape**
 
@@ -282,15 +287,6 @@ This writes `<doc_path>_processed.md` by default. Use `--output <path>` to overr
 - Zotero endpoint unreachable: fail with a readable error (hint: start Zotero + Better BibTeX), and do not emit partial/invalid JSON.
 - No References section found: emit `refs: []` plus a warning in `meta.warnings`.
 - Library items missing fields: be tolerant (missing title/tags/attachments should not crash; output empty arrays/strings).
-
-## Local fixtures (for development)
-
-This repository includes a small, stable fixture pair:
-
-- `../examples/example_entry.md`
-- `../examples/example_entry.library.betterbibtexjson`
-
-Prefer using the cached library snapshot in tests to avoid requiring Zotero to be running.
 
 ## References
 
